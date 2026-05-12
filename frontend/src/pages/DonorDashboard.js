@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -15,13 +15,42 @@ function DonorDashboard() {
     status: 'available'
   });
 
+  // Fetch donations from MySQL
+  useEffect(() => {
+
+    fetchDonations();
+
+  }, []);
+
+  // Get donations from backend
+  const fetchDonations = async () => {
+
+    try {
+
+      const response = await axios.get(
+        'http://localhost:5000/api/donations'
+      );
+
+      setDonations(response.data);
+
+    } catch (error) {
+
+      console.log(error);
+
+    }
+  };
+
+  // Handle form input
   const handleChange = (e) => {
+
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
+
   };
 
+  // Add donation
   const handleSubmit = async (e) => {
 
     e.preventDefault();
@@ -36,20 +65,16 @@ function DonorDashboard() {
       };
 
       const response = await axios.post(
-        'http://localhost:5000/api/add-donation',
+        'http://localhost:5000/api/donations/add-donation',
         donationData
       );
 
       alert(response.data.message);
 
-      setDonations([
-        ...donations,
-        {
-          ...formData,
-          status: 'available'
-        }
-      ]);
+      // Refresh donations from database
+      fetchDonations();
 
+      // Clear form
       setFormData({
         resource_type: '',
         quantity: '',
@@ -66,9 +91,13 @@ function DonorDashboard() {
     }
   };
 
+  // Logout
   const handleLogout = () => {
+
     localStorage.clear();
+
     navigate('/');
+
   };
 
   return (
@@ -76,7 +105,10 @@ function DonorDashboard() {
     <div className="container mt-4">
 
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 style={{ color: '#27ae60' }}>Donor Dashboard</h2>
+
+        <h2 style={{ color: '#27ae60' }}>
+          Donor Dashboard
+        </h2>
 
         <button
           className="btn btn-outline-success"
@@ -84,19 +116,29 @@ function DonorDashboard() {
         >
           Logout
         </button>
+
       </div>
+
+      {/* Dashboard Cards */}
 
       <div className="row mb-4">
 
         <div className="col-md-4">
+
           <div className="card text-white bg-success p-3 text-center">
+
             <h5>Total Donations</h5>
+
             <h2>{donations.length}</h2>
+
           </div>
+
         </div>
 
         <div className="col-md-4">
+
           <div className="card text-white bg-warning p-3 text-center">
+
             <h5>Assigned</h5>
 
             <h2>
@@ -106,11 +148,15 @@ function DonorDashboard() {
                 ).length
               }
             </h2>
+
           </div>
+
         </div>
 
         <div className="col-md-4">
+
           <div className="card text-white bg-info p-3 text-center">
+
             <h5>Delivered</h5>
 
             <h2>
@@ -120,14 +166,20 @@ function DonorDashboard() {
                 ).length
               }
             </h2>
+
           </div>
+
         </div>
 
       </div>
 
+      {/* Add Donation Form */}
+
       <div className="card p-4 shadow mb-4">
 
-        <h4 className="mb-3">Add New Donation</h4>
+        <h4 className="mb-3">
+          Add New Donation
+        </h4>
 
         <form onSubmit={handleSubmit}>
 
@@ -227,7 +279,10 @@ function DonorDashboard() {
 
       </div>
 
+      {/* Donation Table */}
+
       {
+
         donations.length > 0 && (
 
           <div className="card p-4 shadow">
@@ -252,12 +307,15 @@ function DonorDashboard() {
               <tbody>
 
                 {
+
                   donations.map((d, index) => (
 
                     <tr key={index}>
 
                       <td>{d.resource_type}</td>
+
                       <td>{d.quantity}</td>
+
                       <td>{d.location}</td>
 
                       <td>
@@ -279,6 +337,7 @@ function DonorDashboard() {
                     </tr>
 
                   ))
+
                 }
 
               </tbody>
@@ -288,9 +347,11 @@ function DonorDashboard() {
           </div>
 
         )
+
       }
 
     </div>
+
   );
 }
 

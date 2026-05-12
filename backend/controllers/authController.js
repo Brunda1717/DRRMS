@@ -47,3 +47,26 @@ exports.login = async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 };
+// Register Victim
+exports.registerVictim = (req, res) => {
+  const { name, proof_id, phone, address, disaster_area, family_size, priority_level } = req.body;
+  const ngo_id = req.body.ngo_id;
+  const sql = 'INSERT INTO victims (ngo_id, name, proof_id, phone, address, disaster_area, family_size, priority_level) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+  db.query(sql, [ngo_id, name, proof_id, phone, address, disaster_area, family_size, priority_level], (err, result) => {
+    if (err) return res.status(500).json({ error: 'Server error' });
+    res.status(201).json({ message: 'Victim registered successfully' });
+  });
+};
+
+// Get all victims
+exports.getVictims = (req, res) => {
+  const sql = `
+    SELECT v.*, u.name as ngo_name 
+    FROM victims v
+    JOIN users u ON v.ngo_id = u.user_id
+  `;
+  db.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ error: 'Server error' });
+    res.json(results);
+  });
+};

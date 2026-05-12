@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { registerVictim, getVictims } from '../services/api';
 
 function NGODashboard() {
   const navigate = useNavigate();
+  const ngo_id = localStorage.getItem('user_id');
+  const name = localStorage.getItem('name');
   const [victims, setVictims] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
     proof_id: '',
@@ -14,23 +18,42 @@ function NGODashboard() {
     priority_level: 'medium'
   });
 
+  useEffect(() => {
+    fetchVictims();
+  }, []);
+
+  const fetchVictims = async () => {
+    try {
+      const res = await getVictims();
+      setVictims(res.data);
+    } catch (err) {
+      console.error('Error fetching victims:', err);
+    }
+    setLoading(false);
+  };
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setVictims([...victims, formData]);
-    setFormData({
-      name: '',
-      proof_id: '',
-      phone: '',
-      address: '',
-      disaster_area: '',
-      family_size: '',
-      priority_level: 'medium'
-    });
-    alert('Victim registered successfully!');
+    try {
+      await registerVictim({ ...formData, ngo_id });
+      alert('Victim registered successfully!');
+      setFormData({
+        name: '',
+        proof_id: '',
+        phone: '',
+        address: '',
+        disaster_area: '',
+        family_size: '',
+        priority_level: 'medium'
+      });
+      fetchVictims();
+    } catch (err) {
+      alert('Error registering victim');
+    }
   };
 
   const handleLogout = () => {
@@ -38,10 +61,13 @@ function NGODashboard() {
     navigate('/');
   };
 
+  const critical = victims.filter(v => v.priority_level === 'critical').length;
+  const high = victims.filter(v => v.priority_level === 'high').length;
+
   return (
     <div className="container mt-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 style={{ color: '#e74c3c' }}>NGO Dashboard</h2>
+        <h2 style={{ color: '#e74c3c' }}>NGO Dashboard — {name}</h2>
         <button className="btn btn-outline-danger" onClick={handleLogout}>
           Logout
         </button>
@@ -56,14 +82,14 @@ function NGODashboard() {
         </div>
         <div className="col-md-4">
           <div className="card text-white bg-warning p-3 text-center">
-            <h5>Pending Requests</h5>
-            <h2>0</h2>
+            <h5>Critical</h5>
+            <h2>{critical}</h2>
           </div>
         </div>
         <div className="col-md-4">
-          <div className="card text-white bg-success p-3 text-center">
-            <h5>Delivered</h5>
-            <h2>0</h2>
+          <div className="card text-white bg-info p-3 text-center">
+            <h5>High Priority</h5>
+            <h2>{high}</h2>
           </div>
         </div>
       </div>
@@ -126,9 +152,11 @@ function NGODashboard() {
         </form>
       </div>
 
-      {victims.length > 0 && (
-        <div className="card p-4 shadow">
-          <h4 className="mb-3">Registered Victims</h4>
+      <div className="card p-4 shadow">
+        <h4 className="mb-3">All Registered Victims</h4>
+        {loading ? (
+          <p>Loading victims...</p>
+        ) : (
           <table className="table table-striped">
             <thead className="table-danger">
               <tr>
@@ -136,6 +164,7 @@ function NGODashboard() {
                 <th>Disaster Area</th>
                 <th>Family Size</th>
                 <th>Priority</th>
+                <th>NGO</th>
               </tr>
             </thead>
             <tbody>
@@ -153,12 +182,13 @@ function NGODashboard() {
                       {v.priority_level}
                     </span>
                   </td>
+                  <td>{v.ngo_name}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
