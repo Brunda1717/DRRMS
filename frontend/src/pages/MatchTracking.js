@@ -1,62 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getMatches } from '../services/api';
 
 function MatchTracking() {
   const navigate = useNavigate();
-  const [matches] = useState([
-    {
-      match_id: 1,
-      victim_name: 'Suresh Kumar',
-      disaster_area: 'Mysore',
-      donor_name: 'Amit Shah',
-      resource_type: 'Food Kits',
-      matched_quantity: 10,
-      delivery_status: 'delivered',
-      matched_at: '2026-05-01'
-    },
-    {
-      match_id: 2,
-      victim_name: 'Meena Devi',
-      disaster_area: 'Mysore',
-      donor_name: 'Amit Shah',
-      resource_type: 'Water Bottles',
-      matched_quantity: 20,
-      delivery_status: 'in_transit',
-      matched_at: '2026-05-02'
-    },
-    {
-      match_id: 3,
-      victim_name: 'Anand Raj',
-      disaster_area: 'Chennai',
-      donor_name: 'Sunil Donor',
-      resource_type: 'Medicines',
-      matched_quantity: 5,
-      delivery_status: 'pending',
-      matched_at: '2026-05-03'
-    },
-    {
-      match_id: 4,
-      victim_name: 'Lakshmi S',
-      disaster_area: 'Chennai',
-      donor_name: 'Rahul Donor',
-      resource_type: 'Food Kits',
-      matched_quantity: 15,
-      delivery_status: 'in_transit',
-      matched_at: '2026-05-04'
-    },
-    {
-      match_id: 5,
-      victim_name: 'Basavraj',
-      disaster_area: 'Hubli',
-      donor_name: 'Vikram Donor',
-      resource_type: 'Blankets',
-      matched_quantity: 10,
-      delivery_status: 'pending',
-      matched_at: '2026-05-05'
-    },
-  ]);
-
+  const [matches, setMatches] = useState([]);
   const [filter, setFilter] = useState('all');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchMatches();
+  }, []);
+
+  const fetchMatches = async () => {
+    try {
+      const res = await getMatches();
+      setMatches(res.data);
+    } catch (err) {
+      console.error('Error fetching matches:', err);
+    }
+    setLoading(false);
+  };
 
   const filteredMatches = filter === 'all'
     ? matches
@@ -108,41 +72,53 @@ function MatchTracking() {
           </select>
         </div>
 
-        <table className="table table-striped">
-          <thead style={{ backgroundColor: '#8e44ad', color: 'white' }}>
-            <tr>
-              <th>ID</th>
-              <th>Victim</th>
-              <th>Area</th>
-              <th>Donor</th>
-              <th>Resource</th>
-              <th>Quantity</th>
-              <th>Status</th>
-              <th>Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredMatches.map((m, index) => (
-              <tr key={index}>
-                <td>{m.match_id}</td>
-                <td>{m.victim_name}</td>
-                <td>{m.disaster_area}</td>
-                <td>{m.donor_name}</td>
-                <td>{m.resource_type}</td>
-                <td>{m.matched_quantity}</td>
-                <td>
-                  <span className={`badge bg-${
-                    m.delivery_status === 'delivered' ? 'success' :
-                    m.delivery_status === 'in_transit' ? 'info' : 'warning'
-                  }`}>
-                    {m.delivery_status}
-                  </span>
-                </td>
-                <td>{m.matched_at}</td>
+        {loading ? (
+          <p className="text-center">Loading matches...</p>
+        ) : (
+          <table className="table table-striped">
+            <thead style={{ backgroundColor: '#8e44ad', color: 'white' }}>
+              <tr>
+                <th>ID</th>
+                <th>Victim</th>
+                <th>Area</th>
+                <th>Donor</th>
+                <th>Resource</th>
+                <th>Quantity</th>
+                <th>Priority</th>
+                <th>Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredMatches.map((m, index) => (
+                <tr key={index}>
+                  <td>{m.match_id}</td>
+                  <td>{m.victim_name}</td>
+                  <td>{m.disaster_area}</td>
+                  <td>{m.donor_name}</td>
+                  <td>{m.resource_type}</td>
+                  <td>{m.matched_quantity}</td>
+                  <td>
+                    <span className={`badge bg-${
+                      m.priority_level === 'critical' ? 'danger' :
+                      m.priority_level === 'high' ? 'warning' :
+                      m.priority_level === 'medium' ? 'info' : 'success'
+                    }`}>
+                      {m.priority_level}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`badge bg-${
+                      m.delivery_status === 'delivered' ? 'success' :
+                      m.delivery_status === 'in_transit' ? 'info' : 'warning'
+                    }`}>
+                      {m.delivery_status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );

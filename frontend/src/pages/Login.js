@@ -6,15 +6,19 @@ function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const res = await loginUser({ email, password });
-      const { token, role } = res.data;
+      const { token, role, name, user_id } = res.data;
       localStorage.setItem('token', token);
       localStorage.setItem('role', role);
+      localStorage.setItem('name', name);
+      localStorage.setItem('user_id', user_id);
 
       if (role === 'ngo') navigate('/ngo-dashboard');
       else if (role === 'donor') navigate('/donor-dashboard');
@@ -22,6 +26,7 @@ function Login() {
     } catch (err) {
       setError('Invalid email or password');
     }
+    setLoading(false);
   };
 
   return (
@@ -59,8 +64,11 @@ function Login() {
             />
           </div>
 
-          <button type="submit" className="btn btn-danger w-100">
-            Login
+          <button
+            type="submit"
+            className="btn btn-danger w-100"
+            disabled={loading}>
+            {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
 
