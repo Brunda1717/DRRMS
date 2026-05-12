@@ -70,3 +70,103 @@ exports.getVictims = (req, res) => {
     res.json(results);
   });
 };
+// Analytics Data
+exports.getAnalytics = (req, res) => {
+
+  const analytics = {};
+
+  // Total donors
+  db.query(
+    "SELECT COUNT(*) AS totalDonors FROM users WHERE role='donor'",
+    (err, donorResult) => {
+
+      if (err) {
+        return res.status(500).json({ error: 'Server error' });
+      }
+
+      analytics.totalDonors =
+        donorResult[0].totalDonors;
+
+      // Total NGOs
+      db.query(
+        "SELECT COUNT(*) AS totalNGOs FROM users WHERE role='ngo'",
+        (err, ngoResult) => {
+
+          analytics.totalNGOs =
+            ngoResult[0].totalNGOs;
+
+          // Total Victims
+          db.query(
+            "SELECT COUNT(*) AS totalVictims FROM victims",
+            (err, victimResult) => {
+
+              analytics.totalVictims =
+                victimResult[0].totalVictims;
+
+              // Total Donations
+              db.query(
+                "SELECT COUNT(*) AS totalDonations FROM donations",
+                (err, donationResult) => {
+
+                  analytics.totalDonations =
+                    donationResult[0].totalDonations;
+
+                  // Total Requests
+                  db.query(
+                    "SELECT COUNT(*) AS totalRequests FROM resource_requests",
+                    (err, requestResult) => {
+
+                      analytics.totalRequests =
+                        requestResult[0].totalRequests;
+
+                      // Total Matches
+                      db.query(
+                        "SELECT COUNT(*) AS totalMatches FROM matches",
+                        (err, matchResult) => {
+
+                          analytics.totalMatches =
+                            matchResult[0].totalMatches;
+
+                          // Delivered
+                          db.query(
+                            "SELECT COUNT(*) AS delivered FROM matches WHERE delivery_status='delivered'",
+                            (err, deliveredResult) => {
+
+                              analytics.delivered =
+                                deliveredResult[0].delivered;
+
+                              // Pending
+                              db.query(
+                                "SELECT COUNT(*) AS pending FROM matches WHERE delivery_status='pending'",
+                                (err, pendingResult) => {
+
+                                  analytics.pending =
+                                    pendingResult[0].pending;
+
+                                  res.json(analytics);
+
+                                }
+                              );
+
+                            }
+                          );
+
+                        }
+                      );
+
+                    }
+                  );
+
+                }
+              );
+
+            }
+          );
+
+        }
+      );
+
+    }
+  );
+
+};

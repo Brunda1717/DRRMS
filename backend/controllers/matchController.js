@@ -2,22 +2,51 @@ const db = require('../config/db');
 
 // Get all matches
 exports.getMatches = (req, res) => {
+
   const sql = `
-    SELECT m.*, 
-      v.name as victim_name, 
+    SELECT 
+      m.match_id,
+      m.matched_quantity,
+      m.delivery_status,
+      m.matched_at,
+
+      v.name AS victim_name,
       v.disaster_area,
-      u.name as donor_name,
+
+      u.name AS donor_name,
+
       rr.resource_type,
       rr.priority_level
+
     FROM matches m
-    JOIN resource_requests rr ON m.request_id = rr.request_id
-    JOIN victims v ON rr.victim_id = v.victim_id
-    JOIN donations d ON m.donation_id = d.donation_id
-    JOIN users u ON d.donor_id = u.user_id
+
+    JOIN resource_requests rr
+      ON m.request_id = rr.request_id
+
+    JOIN victims v
+      ON rr.victim_id = v.victim_id
+
+    JOIN donations d
+      ON m.donation_id = d.donation_id
+
+    JOIN users u
+      ON d.donor_id = u.user_id
+
+    ORDER BY m.matched_at DESC
   `;
+
   db.query(sql, (err, results) => {
-    if (err) return res.status(500).json({ error: 'Server error' });
+
+    if (err) {
+
+      return res.status(500).json({
+        error: 'Server error'
+      });
+
+    }
+
     res.json(results);
+
   });
 };
 
