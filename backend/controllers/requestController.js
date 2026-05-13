@@ -1,12 +1,12 @@
 const db = require('../config/db');
 
-// Get all requests
+// GET ALL REQUESTS
 exports.getRequests = (req, res) => {
 
   const sql = `
     SELECT 
       rr.*,
-      v.name as victim_name,
+      v.name AS victim_name,
       v.disaster_area
 
     FROM resource_requests rr
@@ -39,7 +39,7 @@ exports.getRequests = (req, res) => {
 
 };
 
-// Add request + auto matching
+// ADD REQUEST + AUTO MATCH
 exports.addRequest = (req, res) => {
 
   const {
@@ -49,9 +49,9 @@ exports.addRequest = (req, res) => {
     priority_level
   } = req.body;
 
-  // Step 1 — insert request
+  // STEP 1 → INSERT REQUEST
 
-  const requestSql = `
+  const insertRequestSql = `
     INSERT INTO resource_requests
     (
       victim_id,
@@ -63,31 +63,28 @@ exports.addRequest = (req, res) => {
   `;
 
   db.query(
-
-    requestSql,
-
+    insertRequestSql,
     [
       victim_id,
       resource_type,
       quantity_needed,
       priority_level
     ],
-
-    (err, result) => {
+    (err, requestResult) => {
 
       if (err) {
 
         return res.status(500).json({
-          error: 'Server error'
+          error: 'Failed to create request'
         });
 
       }
 
-      const request_id = result.insertId;
+      const requestId = requestResult.insertId;
 
-      // Step 2 — find matching donation
+      // STEP 2 → AUTO MATCH LOGIC
 
-      const donationSql = `
+      const matchSql = `
         SELECT *
         FROM donations
 
@@ -95,76 +92,68 @@ exports.addRequest = (req, res) => {
         AND status = 'available'
         AND quantity >= ?
 
+        ORDER BY quantity DESC
+
         LIMIT 1
       `;
 
       db.query(
+        matchSql,
+        [resource_type, quantity_needed],
+        (err, donationResults) => {
 
-        donationSql,
-
-        [
-          resource_type,
-          quantity_needed
-        ],
-
-        (err2, donations) => {
-
-          if (err2) {
+          if (err) {
 
             return res.status(500).json({
-              error: 'Server error'
+              error: 'Matching failed'
             });
 
           }
 
-          // No donation found
+          // NO MATCH FOUND
 
-          if (donations.length === 0) {
+          if (donationResults.length === 0) {
 
             return res.status(201).json({
-
               message:
-                'Request added. No matching donation available yet.'
-
+                'Request created but no matching donation found'
             });
 
           }
 
-          const donation = donations[0];
+          const donation = donationResults[0];
 
-          // Step 3 — create match
+          // STEP 3 → CREATE MATCH
 
-          const matchSql = `
+          const createMatchSql = `
             INSERT INTO matches
             (
               donation_id,
               request_id,
-              matched_quantity
+              matched_quantity,
+              delivery_status
             )
-            VALUES (?, ?, ?)
+            VALUES (?, ?, ?, 'pending')
           `;
 
           db.query(
-
-            matchSql,
-
+            createMatchSql,
             [
               donation.donation_id,
-              request_id,
+              requestId,
               quantity_needed
             ],
+            (err, matchResult) => {
 
-            (err3) => {
-
-              if (err3) {
+              if (err) {
 
                 return res.status(500).json({
-                  error: 'Server error'
+                  error: 'Failed to create match'
                 });
 
               }
 
-              // Step 4 — update donation status
+              // STEP 4 → UPDATE DONATION STATUS
 
               const updateDonationSql = `
                 UPDATE donations
@@ -173,54 +162,42 @@ exports.addRequest = (req, res) => {
               `;
 
               db.query(
-
                 updateDonationSql,
-
-                [donation.donation_id],
-
-                () => {
-
-                  // Step 5 — update request status
-
-                  const updateRequestSql = `
-                    UPDATE resource_requests
-                    SET status = 'matched'
-                    WHERE request_id = ?
-                  `;
-
-                  db.query(
-
-                    updateRequestSql,
-
-                    [request_id],
-
-                    () => {
-
-                      res.status(201).json({
-
-                        message:
-                          'Request added and auto matched successfully'
-
-                      });
-
-                    }
-
-                  );
-
-                }
-
+                [donation.donation_id]
               );
 
-            }
+              // STEP 5 → UPDATE REQUEST STATUS
 
+              const updateRequestSql = `
+                UPDATE resource_requests
+                SET status = 'matched'
+                WHERE request_id = ?
+              `;
+
+              db.query(
+                updateRequestSql,
+                [requestId]
+              );
+
+              // SUCCESS RESPONSE
+
+              res.status(201).json({
+
+                message:
+                  'Request created and auto matched successfully',
+
+                matchedDonation:
+                  donation.donation_id
+
+              });
+
+            }
           );
 
         }
-
       );
 
     }
-
   );
 
 };

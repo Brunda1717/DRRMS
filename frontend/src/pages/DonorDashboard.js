@@ -8,6 +8,8 @@ function DonorDashboard() {
 
   const [donations, setDonations] = useState([]);
 
+  const [statusFilter, setStatusFilter] = useState('all');
+
   const [formData, setFormData] = useState({
     resource_type: '',
     quantity: '',
@@ -15,14 +17,14 @@ function DonorDashboard() {
     status: 'available'
   });
 
-  // Fetch donations from MySQL
+  // Fetch donations
   useEffect(() => {
 
     fetchDonations();
 
   }, []);
 
-  // Get donations from backend
+  // Get donations
   const fetchDonations = async () => {
 
     try {
@@ -38,6 +40,7 @@ function DonorDashboard() {
       console.log(error);
 
     }
+
   };
 
   // Handle form input
@@ -58,10 +61,15 @@ function DonorDashboard() {
     try {
 
       const donationData = {
+
         donor_id: 1,
+
         resource_type: formData.resource_type,
+
         quantity: formData.quantity,
+
         location: formData.location
+
       };
 
       const response = await axios.post(
@@ -71,10 +79,8 @@ function DonorDashboard() {
 
       alert(response.data.message);
 
-      // Refresh donations from database
       fetchDonations();
 
-      // Clear form
       setFormData({
         resource_type: '',
         quantity: '',
@@ -89,6 +95,7 @@ function DonorDashboard() {
       alert('Failed to add donation');
 
     }
+
   };
 
   // Logout
@@ -100,18 +107,44 @@ function DonorDashboard() {
 
   };
 
+  // FILTERED DONATIONS
+
+  const filteredDonations = donations.filter((d) => {
+
+    if (statusFilter === 'all') return true;
+
+    return d.status === statusFilter;
+
+  });
+
   return (
 
-    <div className="container mt-4">
+    <div
+      className="container-fluid min-vh-100 p-4"
+      style={{
+        background:
+          'linear-gradient(135deg, #141e30, #243b55)'
+      }}
+    >
+
+      {/* HEADER */}
 
       <div className="d-flex justify-content-between align-items-center mb-4">
 
-        <h2 style={{ color: '#27ae60' }}>
-          Donor Dashboard
-        </h2>
+        <div>
+
+          <h2 className="text-white fw-bold">
+            Donor Dashboard
+          </h2>
+
+          <p className="text-light">
+            Disaster Resource Donation System
+          </p>
+
+        </div>
 
         <button
-          className="btn btn-outline-success"
+          className="btn btn-light fw-bold"
           onClick={handleLogout}
         >
           Logout
@@ -119,53 +152,55 @@ function DonorDashboard() {
 
       </div>
 
-      {/* Dashboard Cards */}
+      {/* ACTION BUTTONS */}
 
       <div className="row mb-4">
 
-        <div className="col-md-4">
+        <div className="col-md-6 mb-3">
 
-          <div className="card text-white bg-success p-3 text-center">
+          <div
+            className="card border-0 shadow-lg p-4 text-center text-white"
+            style={{
+              background:
+                'linear-gradient(135deg, #4facfe, #00f2fe)',
+              borderRadius: '20px',
+              cursor: 'pointer'
+            }}
+            onClick={() => navigate('/map')}
+          >
 
-            <h5>Total Donations</h5>
+            <h4 className="fw-bold mb-2">
+              Open Map Tracking
+            </h4>
 
-            <h2>{donations.length}</h2>
-
-          </div>
-
-        </div>
-
-        <div className="col-md-4">
-
-          <div className="card text-white bg-warning p-3 text-center">
-
-            <h5>Assigned</h5>
-
-            <h2>
-              {
-                donations.filter(
-                  d => d.status === 'assigned'
-                ).length
-              }
-            </h2>
+            <p className="mb-0">
+              View live donor-to-victim routes
+            </p>
 
           </div>
 
         </div>
 
-        <div className="col-md-4">
+        <div className="col-md-6 mb-3">
 
-          <div className="card text-white bg-info p-3 text-center">
+          <div
+            className="card border-0 shadow-lg p-4 text-center text-white"
+            style={{
+              background:
+                'linear-gradient(135deg, #43e97b, #38f9d7)',
+              borderRadius: '20px',
+              cursor: 'pointer'
+            }}
+            onClick={() => navigate('/donate')}
+          >
 
-            <h5>Delivered</h5>
+            <h4 className="fw-bold mb-2">
+              Open Donation Page
+            </h4>
 
-            <h2>
-              {
-                donations.filter(
-                  d => d.status === 'delivered'
-                ).length
-              }
-            </h2>
+            <p className="mb-0">
+              Manage and add disaster resources
+            </p>
 
           </div>
 
@@ -173,11 +208,107 @@ function DonorDashboard() {
 
       </div>
 
-      {/* Add Donation Form */}
+      {/* DASHBOARD CARDS */}
 
-      <div className="card p-4 shadow mb-4">
+      <div className="row mb-4">
 
-        <h4 className="mb-3">
+        <div className="col-md-4 mb-3">
+
+          <div
+            className="card border-0 shadow-lg text-white"
+            style={{
+              background:
+                'linear-gradient(135deg, #11998e, #38ef7d)',
+              borderRadius: '20px'
+            }}
+          >
+
+            <div className="card-body text-center">
+
+              <h5>Total Donations</h5>
+
+              <h1>{donations.length}</h1>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <div className="col-md-4 mb-3">
+
+          <div
+            className="card border-0 shadow-lg text-white"
+            style={{
+              background:
+                'linear-gradient(135deg, #f7971e, #ffd200)',
+              borderRadius: '20px'
+            }}
+          >
+
+            <div className="card-body text-center">
+
+              <h5>Assigned</h5>
+
+              <h1>
+
+                {
+                  donations.filter(
+                    d => d.status === 'assigned'
+                  ).length
+                }
+
+              </h1>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <div className="col-md-4 mb-3">
+
+          <div
+            className="card border-0 shadow-lg text-white"
+            style={{
+              background:
+                'linear-gradient(135deg, #36d1dc, #5b86e5)',
+              borderRadius: '20px'
+            }}
+          >
+
+            <div className="card-body text-center">
+
+              <h5>Delivered</h5>
+
+              <h1>
+
+                {
+                  donations.filter(
+                    d => d.status === 'delivered'
+                  ).length
+                }
+
+              </h1>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* ADD DONATION FORM */}
+
+      <div
+        className="card border-0 shadow-lg p-4 mb-4"
+        style={{
+          borderRadius: '20px'
+        }}
+      >
+
+        <h4 className="mb-4 fw-bold">
           Add New Donation
         </h4>
 
@@ -270,7 +401,7 @@ function DonorDashboard() {
 
           <button
             type="submit"
-            className="btn btn-success"
+            className="btn btn-success px-4"
           >
             Add Donation
           </button>
@@ -279,70 +410,116 @@ function DonorDashboard() {
 
       </div>
 
-      {/* Donation Table */}
+      {/* DONATION TABLE */}
 
       {
 
         donations.length > 0 && (
 
-          <div className="card p-4 shadow">
+          <div
+            className="card border-0 shadow-lg p-4"
+            style={{
+              borderRadius: '20px'
+            }}
+          >
 
-            <h4 className="mb-3">
-              My Donations
-            </h4>
+            <div className="d-flex justify-content-between align-items-center mb-4">
 
-            <table className="table table-striped">
+              <h4 className="fw-bold">
+                My Donations
+              </h4>
 
-              <thead className="table-success">
+              {/* FILTER */}
 
-                <tr>
-                  <th>Resource Type</th>
-                  <th>Quantity</th>
-                  <th>Location</th>
-                  <th>Status</th>
-                </tr>
-
-              </thead>
-
-              <tbody>
-
-                {
-
-                  donations.map((d, index) => (
-
-                    <tr key={index}>
-
-                      <td>{d.resource_type}</td>
-
-                      <td>{d.quantity}</td>
-
-                      <td>{d.location}</td>
-
-                      <td>
-
-                        <span className={`badge bg-${
-                          d.status === 'available'
-                            ? 'success'
-                            : d.status === 'assigned'
-                            ? 'warning'
-                            : 'info'
-                        }`}>
-
-                          {d.status}
-
-                        </span>
-
-                      </td>
-
-                    </tr>
-
-                  ))
-
+              <select
+                className="form-select w-auto"
+                value={statusFilter}
+                onChange={(e) =>
+                  setStatusFilter(e.target.value)
                 }
+              >
 
-              </tbody>
+                <option value="all">
+                  All Donations
+                </option>
 
-            </table>
+                <option value="available">
+                  Available
+                </option>
+
+                <option value="assigned">
+                  Assigned
+                </option>
+
+                <option value="delivered">
+                  Delivered
+                </option>
+
+              </select>
+
+            </div>
+
+            <div className="table-responsive">
+
+              <table className="table table-hover align-middle">
+
+                <thead className="table-dark">
+
+                  <tr>
+
+                    <th>Resource Type</th>
+
+                    <th>Quantity</th>
+
+                    <th>Location</th>
+
+                    <th>Status</th>
+
+                  </tr>
+
+                </thead>
+
+                <tbody>
+
+                  {
+
+                    filteredDonations.map((d, index) => (
+
+                      <tr key={index}>
+
+                        <td>{d.resource_type}</td>
+
+                        <td>{d.quantity}</td>
+
+                        <td>{d.location}</td>
+
+                        <td>
+
+                          <span className={`badge bg-${
+                            d.status === 'available'
+                              ? 'success'
+                              : d.status === 'assigned'
+                              ? 'warning'
+                              : 'info'
+                          }`}>
+
+                            {d.status}
+
+                          </span>
+
+                        </td>
+
+                      </tr>
+
+                    ))
+
+                  }
+
+                </tbody>
+
+              </table>
+
+            </div>
 
           </div>
 
@@ -353,6 +530,7 @@ function DonorDashboard() {
     </div>
 
   );
+
 }
 
 export default DonorDashboard;

@@ -4,6 +4,7 @@ import React, {
 } from 'react';
 
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 function RequestForm() {
 
@@ -74,7 +75,7 @@ function RequestForm() {
 
       );
 
-      alert(res.data.message);
+      toast.success(res.data.message);
 
       setFormData({
 
@@ -89,7 +90,7 @@ function RequestForm() {
 
       console.log(err);
 
-      alert('Failed to create request');
+      toast.error('Failed to create request');
 
     }
 
