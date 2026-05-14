@@ -15,80 +15,55 @@ const [statusFilter,setStatusFilter]=useState('all');
 const [donorFilter,setDonorFilter]=useState('');
 
 useEffect(()=>{
-
 fetchMatches();
 fetchAnalytics();
-
 const interval=setInterval(()=>{
 fetchMatches();
 fetchAnalytics();
 },5000);
-
 return()=>clearInterval(interval);
-
 },[]);
 
 const fetchMatches=async()=>{
-
 try{
 const res=await getMatches();
 setMatches(res.data);
 }catch(err){
 console.log(err);
 }
-
 setLoading(false);
-
 };
 
 const fetchAnalytics=async()=>{
-
 try{
 const res=await getAnalytics();
 setAnalytics(res.data);
 }catch(err){
 console.log(err);
 }
-
 };
 
 const handleStatusChange=async(matchId,newStatus)=>{
-
 try{
-
-await updateMatchStatus(matchId,{
-delivery_status:newStatus
-});
-
+await updateMatchStatus(matchId,{delivery_status:newStatus});
 fetchMatches();
 fetchAnalytics();
-
 toast.success('Delivery status updated!');
-
 }catch(err){
-
 console.log(err);
 toast.error('Failed to update status');
-
 }
-
 };
 
 const handleLogout=()=>{
-
 localStorage.clear();
 navigate('/');
-
 };
 
 const filteredMatches=matches.filter((m)=>{
-
 const statusMatch=statusFilter==='all'?true:m.delivery_status===statusFilter;
-
 const donorMatch=donorFilter===''?true:m.donor_name?.toLowerCase().includes(donorFilter.toLowerCase());
-
 return statusMatch && donorMatch;
-
 });
 
 const deliveredCount=matches.filter(m=>m.delivery_status==='delivered').length;
@@ -110,499 +85,664 @@ const barData=[
 {name:'Matches',count:analytics.totalMatches||0}
 ];
 
-const COLORS=['#4fc3f7','#ff9800'];
+const COLORS=['#00e5ff','#ffb300'];
+
+const getStatusColor=(status)=>{
+if(status==='delivered') return '#00e676';
+if(status==='in_transit') return '#29b6f6';
+return '#ffb300';
+};
+
+const getPriorityColor=(level)=>{
+if(level==='critical') return '#ff1744';
+if(level==='high') return '#ff9100';
+if(level==='medium') return '#00b0ff';
+return '#69f0ae';
+};
 
 return(
-
 <div style={styles.page}>
 
 <style>{`
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap');
 
 *{
-font-family:'Poppins',sans-serif;
+font-family:'Outfit',sans-serif;
+box-sizing:border-box;
+scroll-behavior:smooth;
 }
 
-.dashboard-card{
-background:rgba(255,255,255,0.06);
-border:1px solid rgba(79,195,247,0.15);
-backdrop-filter:blur(14px);
+body{
+margin:0;
+padding:0;
+background:#02101f;
+overflow-x:hidden;
+}
+
+/* BACKGROUND */
+.bg-overlay{
+position:fixed;
+inset:0;
+background:
+linear-gradient(rgba(1,16,31,0.88),rgba(1,16,31,0.92)),
+url('https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?q=80&w=2070&auto=format&fit=crop');
+background-size:cover;
+background-position:center;
+z-index:-2;
+}
+
+.bg-glow{
+position:fixed;
+width:700px;
+height:700px;
+border-radius:50%;
+background:radial-gradient(circle,rgba(0,229,255,0.16),transparent 70%);
+top:-200px;
+right:-180px;
+filter:blur(40px);
+z-index:-1;
+animation:floatGlow 8s ease-in-out infinite alternate;
+}
+
+.bg-glow2{
+position:fixed;
+width:500px;
+height:500px;
+border-radius:50%;
+background:radial-gradient(circle,rgba(0,119,255,0.14),transparent 70%);
+bottom:-120px;
+left:-120px;
+filter:blur(40px);
+z-index:-1;
+animation:floatGlow2 10s ease-in-out infinite alternate;
+}
+
+@keyframes floatGlow{
+from{transform:translateY(0px);}
+to{transform:translateY(40px);}
+}
+
+@keyframes floatGlow2{
+from{transform:translateX(0px);}
+to{transform:translateX(40px);}
+}
+
+/* GLASS CARD */
+.g-card{
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(18px);
+border:1px solid rgba(255,255,255,0.08);
 border-radius:24px;
+box-shadow:0 10px 40px rgba(0,0,0,0.35);
 transition:all 0.35s ease;
-overflow:hidden;
-}
-
-.dashboard-card:hover{
-transform:translateY(-6px);
-border-color:#4fc3f7;
-box-shadow:0 20px 50px rgba(0,0,0,0.35);
-}
-
-.glow-btn{
-background:linear-gradient(135deg,#0288d1,#4fc3f7);
-border:none;
-color:white;
-padding:12px 24px;
-border-radius:50px;
-font-weight:600;
-transition:all 0.3s ease;
-}
-
-.glow-btn:hover{
-transform:translateY(-3px) scale(1.03);
-box-shadow:0 10px 25px rgba(79,195,247,0.4);
-}
-
-.metric-card{
 position:relative;
 overflow:hidden;
+}
+
+.g-card::before{
+content:'';
+position:absolute;
+inset:0;
+background:linear-gradient(120deg,transparent,rgba(255,255,255,0.05),transparent);
+transform:translateX(-100%);
+transition:0.8s;
+}
+
+.g-card:hover::before{
+transform:translateX(100%);
+}
+
+.g-card:hover{
+transform:translateY(-6px);
+border-color:rgba(0,229,255,0.25);
+box-shadow:0 25px 60px rgba(0,0,0,0.45);
+}
+
+/* HEADER */
+.dashboard-title{
+font-family:'Syne',sans-serif;
+font-size:2.8rem;
+font-weight:800;
+background:linear-gradient(90deg,#ffffff,#7dd3fc,#38bdf8);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+margin:0;
+}
+
+.live-pill{
+display:flex;
+align-items:center;
+gap:10px;
+padding:10px 18px;
+border-radius:50px;
+background:rgba(255,255,255,0.06);
+border:1px solid rgba(255,255,255,0.08);
+color:#dbeafe;
+font-size:0.85rem;
+font-weight:600;
+}
+
+.live-dot{
+width:8px;
+height:8px;
+border-radius:50%;
+background:#00e676;
+box-shadow:0 0 12px #00e676;
+animation:pulse 1.5s infinite;
+}
+
+@keyframes pulse{
+0%{transform:scale(1);opacity:1;}
+50%{transform:scale(1.4);opacity:0.7;}
+100%{transform:scale(1);opacity:1;}
+}
+
+/* BUTTONS */
+.logout-btn{
+background:linear-gradient(135deg,#0ea5e9,#2563eb);
+border:none;
+color:#fff;
+padding:12px 24px;
+border-radius:14px;
+font-weight:700;
+cursor:pointer;
+transition:all 0.3s ease;
+box-shadow:0 8px 20px rgba(37,99,235,0.4);
+}
+
+.logout-btn:hover{
+transform:translateY(-3px) scale(1.03);
+box-shadow:0 14px 28px rgba(37,99,235,0.5);
+}
+
+.logout-btn:active{
+transform:scale(0.97);
+}
+
+/* NAVIGATION CARDS */
+.nav-card{
+position:relative;
+overflow:hidden;
+cursor:pointer;
+padding:30px;
+border-radius:24px;
 transition:all 0.35s ease;
 }
 
-.metric-card::before{
-content:'';
-position:absolute;
-top:0;
-left:-100%;
-width:100%;
-height:100%;
-background:linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent);
-transition:0.7s;
+.nav-card:hover{
+transform:translateY(-8px) scale(1.01);
 }
 
-.metric-card:hover::before{
-left:100%;
+.nav-card::after{
+content:'';
+position:absolute;
+width:220px;
+height:220px;
+background:rgba(255,255,255,0.08);
+border-radius:50%;
+top:-90px;
+right:-90px;
+transition:0.5s;
+}
+
+.nav-card:hover::after{
+transform:scale(1.2);
+}
+
+.nav-icon{
+font-size:2.6rem;
+margin-bottom:14px;
+animation:floatIcon 3s ease-in-out infinite;
+}
+
+@keyframes floatIcon{
+0%{transform:translateY(0px);}
+50%{transform:translateY(-6px);}
+100%{transform:translateY(0px);}
+}
+
+/* METRIC CARDS */
+.metric-card{
+padding:26px;
+position:relative;
+overflow:hidden;
 }
 
 .metric-card:hover{
-transform:translateY(-8px) scale(1.02);
+transform:translateY(-8px) scale(1.03);
 }
 
-.table-row{
-transition:all 0.25s ease;
+.metric-number{
+font-family:'Syne',sans-serif;
+font-size:2.6rem;
+font-weight:800;
+color:#fff;
+margin:10px 0;
 }
 
-.table-row:hover{
-background:rgba(79,195,247,0.08);
-transform:scale(1.01);
+/* SECTION TITLE */
+.section-title{
+font-size:1.1rem;
+font-weight:700;
+color:#fff;
+margin-bottom:22px;
+display:flex;
+align-items:center;
+gap:10px;
 }
 
-.custom-input{
-background:rgba(255,255,255,0.06)!important;
-border:1px solid rgba(79,195,247,0.2)!important;
-color:white!important;
-border-radius:14px!important;
-padding:12px!important;
-}
-
-.custom-input:focus{
-box-shadow:0 0 0 0.2rem rgba(79,195,247,0.25)!important;
-border-color:#4fc3f7!important;
-}
-
-.custom-input::placeholder{
-color:#aaa;
-}
-
-.activity-item{
-transition:all 0.3s ease;
-border-radius:14px;
-padding:12px;
-}
-
-.activity-item:hover{
-background:rgba(79,195,247,0.08);
-transform:translateX(6px);
-}
-
-.progress{
-height:12px!important;
-border-radius:30px!important;
-background:rgba(255,255,255,0.08)!important;
+/* PROGRESS */
+.progress-track{
+height:12px;
+background:rgba(255,255,255,0.08);
+border-radius:30px;
 overflow:hidden;
 }
 
-.progress-bar{
-border-radius:30px!important;
+.progress-fill{
+height:100%;
+border-radius:30px;
+transition:width 0.8s ease;
 }
 
-.animate-fade{
+/* ACTIVITY */
+.activity-item{
+padding:16px;
+border-radius:16px;
+margin-bottom:14px;
+background:rgba(255,255,255,0.03);
+border:1px solid rgba(255,255,255,0.05);
+transition:all 0.3s ease;
+}
+
+.activity-item:hover{
+transform:translateX(8px);
+background:rgba(0,229,255,0.08);
+}
+
+/* FILTERS */
+.filter-input,.filter-select{
+width:100%;
+padding:14px 16px;
+border-radius:14px;
+background:rgba(255,255,255,0.05);
+border:1px solid rgba(255,255,255,0.08);
+color:#fff;
+outline:none;
+transition:all 0.3s ease;
+}
+
+.filter-input::placeholder{
+color:rgba(255,255,255,0.4);
+}
+
+.filter-input:focus,.filter-select:focus{
+border-color:#38bdf8;
+box-shadow:0 0 0 4px rgba(56,189,248,0.15);
+}
+
+.filter-select option{
+background:#02101f;
+color:#fff;
+}
+
+/* TABLE */
+.match-table{
+width:100%;
+border-collapse:separate;
+border-spacing:0 10px;
+}
+
+.match-table thead th{
+padding:16px;
+color:#7dd3fc;
+font-size:0.78rem;
+text-transform:uppercase;
+letter-spacing:0.08em;
+font-weight:700;
+background:rgba(0,229,255,0.08);
+}
+
+.match-table thead th:first-child{
+border-radius:14px 0 0 14px;
+}
+
+.match-table thead th:last-child{
+border-radius:0 14px 14px 0;
+}
+
+.match-table tbody tr{
+background:rgba(255,255,255,0.04);
+transition:all 0.3s ease;
+}
+
+.match-table tbody tr:hover{
+transform:scale(1.01);
+background:rgba(0,229,255,0.08);
+}
+
+.match-table tbody td{
+padding:16px;
+color:#e0f2fe;
+font-size:0.88rem;
+}
+
+.match-table tbody td:first-child{
+border-radius:14px 0 0 14px;
+}
+
+.match-table tbody td:last-child{
+border-radius:0 14px 14px 0;
+}
+
+/* PILLS */
+.pill{
+padding:7px 14px;
+border-radius:50px;
+font-size:0.72rem;
+font-weight:700;
+display:inline-flex;
+align-items:center;
+gap:6px;
+text-transform:uppercase;
+letter-spacing:0.05em;
+}
+
+/* STATUS SELECT */
+.status-select{
+appearance:none;
+background:#082032;
+color:#fff;
+border:1px solid rgba(0,229,255,0.3);
+padding:10px 14px;
+border-radius:12px;
+outline:none;
+font-weight:600;
+cursor:pointer;
+transition:all 0.3s ease;
+}
+
+.status-select:hover{
+border-color:#38bdf8;
+box-shadow:0 0 16px rgba(56,189,248,0.2);
+}
+
+.status-select option{
+background:#082032;
+color:#ffffff;
+}
+
+/* SCROLL */
+::-webkit-scrollbar{
+width:5px;
+}
+
+::-webkit-scrollbar-thumb{
+background:#38bdf8;
+border-radius:20px;
+}
+
+/* FADE */
+.fade-in{
 animation:fadeUp 0.7s ease;
 }
 
 @keyframes fadeUp{
 from{
 opacity:0;
-transform:translateY(25px);
+transform:translateY(30px);
 }
 to{
 opacity:1;
 transform:translateY(0);
 }
 }
-
-::-webkit-scrollbar{
-width:6px;
-}
-
-::-webkit-scrollbar-thumb{
-background:#4fc3f7;
-border-radius:20px;
-}
 `}</style>
 
-<div className="container-fluid p-4 animate-fade">
+<div className="bg-overlay"/>
+<div className="bg-glow"/>
+<div className="bg-glow2"/>
 
-<div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+<div style={styles.container} className="fade-in">
 
+{/* HEADER */}
+<div style={styles.header}>
 <div>
-<h1 style={styles.title}>DRRMS Admin Dashboard</h1>
-<p style={styles.subtitle}>Real-time disaster monitoring & intelligent relief management</p>
+<h1 className="dashboard-title">DRRMS Admin Dashboard</h1>
+<p style={styles.subtitle}>Disaster Relief Resource Monitoring & Analytics System</p>
 </div>
 
-<button className="glow-btn" onClick={handleLogout}>
-Logout
-</button>
-
+<div style={{display:'flex',alignItems:'center',gap:'18px'}}>
+<div className="live-pill">
+<div className="live-dot"/>
+Live Monitoring
 </div>
-
-<div className="row mb-4">
-
-<div className="col-md-6 mb-3">
-<div className="dashboard-card p-4 h-100" style={styles.blueCard} onClick={()=>navigate('/map')}>
-
-<h3 className="fw-bold text-white mb-2">🗺 Open Disaster Map</h3>
-
-<p className="text-light mb-0">
-Monitor hotspot zones, routes & live relief tracking
-</p>
-
+<button className="logout-btn" onClick={handleLogout}>Logout</button>
 </div>
 </div>
 
-<div className="col-md-6 mb-3">
-<div className="dashboard-card p-4 h-100" style={styles.greenCard}>
+{/* NAV CARDS */}
+<div style={styles.navGrid}>
 
-<h3 className="fw-bold text-white mb-2">⚡ System Monitoring</h3>
-
-<p className="text-light mb-0">
-Live analytics & disaster response insights
-</p>
-
+<div className="nav-card g-card" style={{background:'linear-gradient(135deg,#0284c7,#2563eb)'}} onClick={()=>navigate('/map')}>
+<div className="nav-icon">🗺️</div>
+<h3 style={styles.navTitle}>Disaster Map</h3>
+<p style={styles.navDesc}>Track routes, hotspots, victims & live relief movements</p>
 </div>
+
+<div className="nav-card g-card" style={{background:'linear-gradient(135deg,#0f766e,#0891b2)'}}>
+<div className="nav-icon">⚡</div>
+<h3 style={styles.navTitle}>System Analytics</h3>
+<p style={styles.navDesc}>Real-time response monitoring with advanced insights</p>
 </div>
 
 </div>
 
-<div className="row mb-4">
-
-<div className="col-md-3 mb-3">
-<div className="dashboard-card metric-card text-center p-4" style={styles.card1}>
-<h6 className="text-light">Total Donors</h6>
-<h1 className="fw-bold text-white">{analytics.totalDonors||0}</h1>
+{/* METRICS */}
+<div style={styles.metricsGrid}>
+{[
+{label:'Total Donors',value:analytics.totalDonors||0,bg:'linear-gradient(135deg,#2563eb,#38bdf8)'},
+{label:'Total NGOs',value:analytics.totalNGOs||0,bg:'linear-gradient(135deg,#059669,#10b981)'},
+{label:'Total Victims',value:analytics.totalVictims||0,bg:'linear-gradient(135deg,#dc2626,#f97316)'},
+{label:'Total Matches',value:analytics.totalMatches||0,bg:'linear-gradient(135deg,#7c3aed,#a855f7)'}
+].map((item,index)=>(
+<div key={index} className="g-card metric-card" style={{background:item.bg}}>
+<p style={styles.metricLabel}>{item.label}</p>
+<h2 className="metric-number">{item.value}</h2>
 </div>
-</div>
-
-<div className="col-md-3 mb-3">
-<div className="dashboard-card metric-card text-center p-4" style={styles.card2}>
-<h6 className="text-light">Total NGOs</h6>
-<h1 className="fw-bold text-white">{analytics.totalNGOs||0}</h1>
-</div>
-</div>
-
-<div className="col-md-3 mb-3">
-<div className="dashboard-card metric-card text-center p-4" style={styles.card3}>
-<h6 className="text-light">Total Victims</h6>
-<h1 className="fw-bold text-white">{analytics.totalVictims||0}</h1>
-</div>
+))}
 </div>
 
-<div className="col-md-3 mb-3">
-<div className="dashboard-card metric-card text-center p-4" style={styles.card4}>
-<h6 className="text-light">Total Matches</h6>
-<h1 className="fw-bold text-white">{analytics.totalMatches||0}</h1>
-</div>
-</div>
+{/* PROGRESS + PIE */}
+<div style={styles.doubleGrid}>
 
-</div>
+<div className="g-card" style={styles.section}>
+<div className="section-title">📦 Delivery Progress</div>
 
-<div className="row mb-4">
-
-<div className="col-lg-6 mb-4">
-
-<div className="dashboard-card p-4 h-100">
-
-<h4 className="fw-bold text-white mb-4">
-📦 Delivery Progress
-</h4>
-
-<div className="mb-4">
-
-<div className="d-flex justify-content-between text-light mb-2">
-<span>Delivered</span>
-<span>{deliveredCount}</span>
+{[
+{label:'Delivered',count:deliveredCount,color:'#00e676'},
+{label:'In Transit',count:transitCount,color:'#29b6f6'},
+{label:'Pending',count:pendingCount,color:'#ffb300'}
+].map((item,index)=>(
+<div key={index} style={{marginBottom:'22px'}}>
+<div style={{display:'flex',justifyContent:'space-between',marginBottom:'8px'}}>
+<span style={{color:'rgba(255,255,255,0.75)'}}>{item.label}</span>
+<span style={{color:'#fff',fontWeight:'700'}}>{item.count}</span>
 </div>
 
-<div className="progress">
-<div className="progress-bar bg-success" style={{
-width:`${totalMatches?(deliveredCount/totalMatches)*100:0}%`
-}}/>
+<div className="progress-track">
+<div
+className="progress-fill"
+style={{
+width:`${totalMatches?(item.count/totalMatches)*100:0}%`,
+background:item.color
+}}
+/>
+</div>
+</div>
+))}
 </div>
 
-</div>
+<div className="g-card" style={styles.section}>
+<div className="section-title">📈 Delivery Analytics</div>
 
-<div className="mb-4">
-
-<div className="d-flex justify-content-between text-light mb-2">
-<span>In Transit</span>
-<span>{transitCount}</span>
-</div>
-
-<div className="progress">
-<div className="progress-bar bg-info" style={{
-width:`${totalMatches?(transitCount/totalMatches)*100:0}%`
-}}/>
-</div>
-
-</div>
-
-<div>
-
-<div className="d-flex justify-content-between text-light mb-2">
-<span>Pending</span>
-<span>{pendingCount}</span>
-</div>
-
-<div className="progress">
-<div className="progress-bar bg-warning" style={{
-width:`${totalMatches?(pendingCount/totalMatches)*100:0}%`
-}}/>
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-<div className="col-lg-6 mb-4">
-
-<div className="dashboard-card p-4 h-100">
-
-<h4 className="fw-bold text-white mb-4">
-📈 Delivery Analytics
-</h4>
-
-<div style={{height:'300px'}}>
-
+<div style={{height:'280px'}}>
 <ResponsiveContainer width="100%" height="100%">
-
 <PieChart>
-
-<Pie
-data={pieData}
-cx="50%"
-cy="50%"
-outerRadius={90}
-dataKey="value"
-label
->
-
-{pieData.map((entry,index)=>(
+<Pie data={pieData} dataKey="value" outerRadius={95} label>
+{pieData.map((_,index)=>(
 <Cell key={index} fill={COLORS[index%COLORS.length]}/>
 ))}
-
 </Pie>
 
-<Tooltip/>
-<Legend/>
+<Tooltip contentStyle={{
+background:'#02101f',
+border:'1px solid rgba(255,255,255,0.08)',
+borderRadius:'14px',
+color:'#fff'
+}}/>
+
+<Legend wrapperStyle={{color:'#fff'}}/>
 
 </PieChart>
-
 </ResponsiveContainer>
-
+</div>
 </div>
 
 </div>
 
-</div>
-
-</div>
-
-<div className="dashboard-card p-4 mb-4">
-
-<h4 className="fw-bold text-white mb-4">
-🔥 Live Activity Feed
-</h4>
+{/* LIVE FEED */}
+<div className="g-card" style={{...styles.section,marginBottom:'24px'}}>
+<div className="section-title">🔥 Live Activity Feed</div>
 
 <div style={{maxHeight:'320px',overflowY:'auto'}}>
+{matches.slice(0,8).map((m,index)=>(
+<div key={index} className="activity-item">
 
-{
-matches.slice(0,8).map((m,index)=>(
-
-<div key={index} className="activity-item border-bottom border-secondary">
-
-<div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:'14px'}}>
 
 <div>
-
-<h6 className="fw-bold text-white mb-1">
+<p style={{margin:'0 0 4px',fontWeight:'700',color:'#fff'}}>
 {m.donor_name} → {m.victim_name}
-</h6>
-
-<p className="mb-1 text-light">
-{m.resource_type} | Quantity: {m.matched_quantity}
 </p>
 
-<small style={{color:'#9ecae1'}}>
-{m.matched_at?new Date(m.matched_at).toLocaleString():'N/A'}
-</small>
+<p style={{margin:'0 0 4px',color:'rgba(255,255,255,0.65)',fontSize:'0.84rem'}}>
+{m.resource_type} · Quantity {m.matched_quantity}
+</p>
 
+<p style={{margin:0,color:'rgba(255,255,255,0.4)',fontSize:'0.74rem'}}>
+{m.matched_at?new Date(m.matched_at).toLocaleString():'N/A'}
+</p>
 </div>
 
-<span className={`badge rounded-pill px-3 py-2 bg-${
-m.delivery_status==='delivered'
-?'success'
-:m.delivery_status==='in_transit'
-?'info'
-:'warning'
-}`}>
+<span
+className="pill"
+style={{
+background:`${getStatusColor(m.delivery_status)}22`,
+color:getStatusColor(m.delivery_status),
+border:`1px solid ${getStatusColor(m.delivery_status)}55`
+}}
+>
 {m.delivery_status}
 </span>
 
 </div>
 
 </div>
-
-))
-}
-
+))}
+</div>
 </div>
 
-</div>
+{/* FILTERS */}
+<div className="g-card" style={{...styles.section,marginBottom:'24px'}}>
+<div className="section-title">🔍 Search & Filters</div>
 
-<div className="dashboard-card p-4 mb-4">
+<div style={styles.filterGrid}>
 
-<h4 className="fw-bold text-white mb-4">
-🔍 Search & Filters
-</h4>
-
-<div className="row">
-
-<div className="col-md-6 mb-3">
-
-<label className="form-label text-light">
-Filter by Status
-</label>
+<div>
+<label style={styles.label}>Filter by Status</label>
 
 <select
-className="form-select custom-input"
+className="filter-select"
 value={statusFilter}
-onChange={(e)=>setStatusFilter(e.target.value)}
+onChange={e=>setStatusFilter(e.target.value)}
 >
-
-<option value="all">All</option>
+<option value="all">All Status</option>
 <option value="pending">Pending</option>
 <option value="in_transit">In Transit</option>
 <option value="delivered">Delivered</option>
-
 </select>
-
 </div>
 
-<div className="col-md-6 mb-3">
-
-<label className="form-label text-light">
-Search by Donor
-</label>
+<div>
+<label style={styles.label}>Search by Donor</label>
 
 <input
 type="text"
-className="form-control custom-input"
-placeholder="Enter donor name"
+className="filter-input"
+placeholder="Enter donor name..."
 value={donorFilter}
-onChange={(e)=>setDonorFilter(e.target.value)}
+onChange={e=>setDonorFilter(e.target.value)}
 />
-
 </div>
 
 </div>
-
 </div>
 
-<div className="dashboard-card p-4 mb-4">
-
-<h4 className="fw-bold text-white mb-4">
-📊 System Statistics
-</h4>
+{/* BAR CHART */}
+<div className="g-card" style={{...styles.section,marginBottom:'24px'}}>
+<div className="section-title">📊 System Statistics</div>
 
 <div style={{height:'320px'}}>
-
 <ResponsiveContainer width="100%" height="100%">
-
 <BarChart data={barData}>
+<CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)"/>
 
-<CartesianGrid strokeDasharray="3 3" stroke="#355070"/>
+<XAxis dataKey="name" stroke="rgba(255,255,255,0.5)"/>
 
-<XAxis dataKey="name" stroke="#fff"/>
+<YAxis stroke="rgba(255,255,255,0.5)"/>
 
-<YAxis stroke="#fff"/>
+<Tooltip contentStyle={{
+background:'#02101f',
+border:'1px solid rgba(255,255,255,0.08)',
+borderRadius:'14px',
+color:'#fff'
+}}/>
 
-<Tooltip/>
-
-<Bar dataKey="count" fill="#4fc3f7" radius={[10,10,0,0]}/>
-
+<Bar dataKey="count" fill="#38bdf8" radius={[12,12,0,0]}/>
 </BarChart>
-
 </ResponsiveContainer>
-
+</div>
 </div>
 
-</div>
+{/* MATCH TABLE */}
+<div className="g-card" style={styles.section}>
 
-<div className="dashboard-card p-4">
+<div className="section-title">🚚 Live Match Tracking</div>
 
-<h4 className="fw-bold text-white mb-4">
-🚚 Live Match Tracking
-</h4>
-
-{
-loading?(
-<div className="text-center text-light">
+{loading?(
+<div style={{padding:'40px',textAlign:'center',color:'rgba(255,255,255,0.5)'}}>
 Loading matches...
 </div>
 ):(
+<div style={{overflowX:'auto'}}>
 
-<div className="table-responsive">
-
-<table className="table align-middle text-white">
+<table className="match-table">
 
 <thead>
-
-<tr style={{background:'rgba(79,195,247,0.15)'}}>
-
-<th>ID</th>
-<th>Victim</th>
-<th>Donor</th>
-<th>Resource</th>
-<th>Priority</th>
-<th>Quantity</th>
-<th>Status</th>
-<th>Matched Time</th>
-<th>Update</th>
-
+<tr>
+{['ID','Victim','Donor','Resource','Priority','Qty','Status','Matched Time','Update'].map((h)=>(
+<th key={h}>{h}</th>
+))}
 </tr>
-
 </thead>
 
 <tbody>
 
-{
-filteredMatches.map((m,index)=>(
+{filteredMatches.map((m,index)=>(
+<tr key={index}>
 
-<tr key={index} className="table-row text-white">
-
-<td>{m.match_id}</td>
+<td>#{m.match_id}</td>
 
 <td>{m.victim_name}</td>
 
@@ -611,127 +751,156 @@ filteredMatches.map((m,index)=>(
 <td>{m.resource_type}</td>
 
 <td>
-
-<span className={`badge bg-${
-m.priority_level==='critical'
-?'danger'
-:m.priority_level==='high'
-?'warning'
-:m.priority_level==='medium'
-?'info'
-:'success'
-}`}>
+<span
+className="pill"
+style={{
+background:`${getPriorityColor(m.priority_level)}22`,
+color:getPriorityColor(m.priority_level),
+border:`1px solid ${getPriorityColor(m.priority_level)}55`
+}}
+>
 {m.priority_level}
 </span>
-
 </td>
 
 <td>{m.matched_quantity}</td>
 
 <td>
-
-<span className={`badge bg-${
-m.delivery_status==='delivered'
-?'success'
-:m.delivery_status==='in_transit'
-?'info'
-:'warning'
-}`}>
+<span
+className="pill"
+style={{
+background:`${getStatusColor(m.delivery_status)}22`,
+color:getStatusColor(m.delivery_status),
+border:`1px solid ${getStatusColor(m.delivery_status)}55`
+}}
+>
 {m.delivery_status}
 </span>
+</td>
 
+<td style={{color:'rgba(255,255,255,0.5)',fontSize:'0.8rem'}}>
+{m.matched_at?new Date(m.matched_at).toLocaleString():'N/A'}
 </td>
 
 <td>
-{
-m.matched_at
-?new Date(m.matched_at).toLocaleString()
-:'N/A'
-}
-</td>
-
-<td>
-
 <select
-className="form-select form-select-sm custom-input"
+className="status-select"
 value={m.delivery_status}
-onChange={(e)=>handleStatusChange(m.match_id,e.target.value)}
+onChange={e=>handleStatusChange(m.match_id,e.target.value)}
 >
-
-<option value="pending">Pending</option>
-<option value="in_transit">In Transit</option>
-<option value="delivered">Delivered</option>
-
+<option value="pending">⏳ Pending</option>
+<option value="in_transit">🚚 In Transit</option>
+<option value="delivered">✅ Delivered</option>
 </select>
-
 </td>
 
 </tr>
-
-))
-}
+))}
 
 </tbody>
 
 </table>
 
 </div>
-
-)
-}
+)}
 
 </div>
 
 </div>
 
 </div>
-
 );
-
 }
 
 const styles={
 
 page:{
 minHeight:'100vh',
-background:'linear-gradient(135deg,#012a4a 0%,#013a63 25%,#01497c 50%,#013a63 75%,#012a4a 100%)'
+position:'relative'
 },
 
-title:{
-fontSize:'2.8rem',
-fontWeight:'800',
-color:'#fff',
-fontFamily:'Playfair Display'
+container:{
+maxWidth:'1450px',
+margin:'0 auto',
+padding:'32px 24px 60px'
+},
+
+header:{
+display:'flex',
+justifyContent:'space-between',
+alignItems:'center',
+marginBottom:'34px',
+gap:'20px',
+flexWrap:'wrap'
 },
 
 subtitle:{
+color:'rgba(255,255,255,0.55)',
+marginTop:'6px',
+fontSize:'0.92rem'
+},
+
+navGrid:{
+display:'grid',
+gridTemplateColumns:'1fr 1fr',
+gap:'24px',
+marginBottom:'24px'
+},
+
+navTitle:{
+fontSize:'1.25rem',
+fontWeight:'700',
+color:'#fff',
+margin:'0 0 8px'
+},
+
+navDesc:{
+color:'rgba(255,255,255,0.75)',
+margin:0,
+fontSize:'0.88rem',
+lineHeight:'1.6'
+},
+
+metricsGrid:{
+display:'grid',
+gridTemplateColumns:'repeat(4,1fr)',
+gap:'22px',
+marginBottom:'24px'
+},
+
+metricLabel:{
 color:'rgba(255,255,255,0.7)',
-fontSize:'1rem'
+fontSize:'0.82rem',
+textTransform:'uppercase',
+letterSpacing:'0.08em',
+margin:0
 },
 
-blueCard:{
-background:'linear-gradient(135deg,#0288d1,#4fc3f7)',
-cursor:'pointer'
+doubleGrid:{
+display:'grid',
+gridTemplateColumns:'1fr 1fr',
+gap:'24px',
+marginBottom:'24px'
 },
 
-greenCard:{
-background:'linear-gradient(135deg,#11998e,#38ef7d)'
+section:{
+padding:'28px'
 },
 
-card1:{
-background:'linear-gradient(135deg,#36d1dc,#5b86e5)'
+filterGrid:{
+display:'grid',
+gridTemplateColumns:'1fr 1fr',
+gap:'20px'
 },
 
-card2:{
-background:'linear-gradient(135deg,#11998e,#38ef7d)'
-},
-
-card3:{
-background:'linear-gradient(135deg,#ff416c,#ff4b2b)'
-},
-
-card4:{
-background:'linear-gradient(135deg,#654ea3,#eaafc8)'
+label:{
+display:'block',
+marginBottom:'10px',
+fontSize:'0.82rem',
+fontWeight:'700',
+color:'rgba(255,255,255,0.6)',
+letterSpacing:'0.06em',
+textTransform:'uppercase'
 }
 
 };

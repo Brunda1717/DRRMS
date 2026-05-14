@@ -3,11 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 function DonorDashboard() {
-
   const navigate = useNavigate();
 
   const [donations, setDonations] = useState([]);
-
   const [statusFilter, setStatusFilter] = useState('all');
 
   const [formData, setFormData] = useState({
@@ -17,59 +15,44 @@ function DonorDashboard() {
     status: 'available'
   });
 
-  // Fetch donations
   useEffect(() => {
-
     fetchDonations();
 
+    const interval = setInterval(() => {
+      fetchDonations();
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
-  // Get donations
   const fetchDonations = async () => {
-
     try {
-
       const response = await axios.get(
         'http://localhost:5000/api/donations'
       );
 
       setDonations(response.data);
-
     } catch (error) {
-
       console.log(error);
-
     }
-
   };
 
-  // Handle form input
   const handleChange = (e) => {
-
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
-
   };
 
-  // Add donation
   const handleSubmit = async (e) => {
-
     e.preventDefault();
 
     try {
-
       const donationData = {
-
         donor_id: 1,
-
         resource_type: formData.resource_type,
-
         quantity: formData.quantity,
-
         location: formData.location
-
       };
 
       const response = await axios.post(
@@ -89,350 +72,786 @@ function DonorDashboard() {
       });
 
     } catch (error) {
-
       console.log(error);
-
       alert('Failed to add donation');
-
     }
-
   };
 
-  // Logout
   const handleLogout = () => {
-
     localStorage.clear();
-
     navigate('/');
-
   };
-
-  // FILTERED DONATIONS
 
   const filteredDonations = donations.filter((d) => {
-
     if (statusFilter === 'all') return true;
-
     return d.status === statusFilter;
-
   });
 
+  const totalCount = donations.length;
+
+  const assignedCount = donations.filter(
+    d => d.status === 'assigned'
+  ).length;
+
+  const deliveredCount = donations.filter(
+    d => d.status === 'delivered'
+  ).length;
+
+  const availableCount = donations.filter(
+    d => d.status === 'available'
+  ).length;
+
   return (
+    <div style={styles.page}>
 
-    <div
-      className="container-fluid min-vh-100 p-4"
-      style={{
-        background:
-          'linear-gradient(135deg, #141e30, #243b55)'
-      }}
-    >
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Audiowide&display=swap');
 
-      {/* HEADER */}
+        *{
+          font-family:'Outfit',sans-serif;
+          box-sizing:border-box;
+        }
 
-      <div className="d-flex justify-content-between align-items-center mb-4">
+        body{
+          margin:0;
+          padding:0;
+          overflow-x:hidden;
+          background:#070b1a;
+        }
 
-        <div>
+        /* BACKGROUND IMAGE */
+        .bg-image{
+          position:fixed;
+          inset:0;
+          background:
+          linear-gradient(rgba(5,10,25,0.82),rgba(5,10,25,0.88)),
+          url('https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?q=80&w=2070&auto=format&fit=crop');
+          background-size:cover;
+          background-position:center;
+          z-index:-3;
+          animation:bgZoom 18s ease-in-out infinite alternate;
+        }
 
-          <h2 className="text-white fw-bold">
-            Donor Dashboard
-          </h2>
+        @keyframes bgZoom{
+          from{
+            transform:scale(1);
+          }
+          to{
+            transform:scale(1.08);
+          }
+        }
 
-          <p className="text-light">
-            Disaster Resource Donation System
-          </p>
+        /* FLOATING ORBS */
+        .orb{
+          position:fixed;
+          border-radius:50%;
+          filter:blur(70px);
+          opacity:0.35;
+          z-index:-2;
+          animation:float 12s ease-in-out infinite;
+        }
 
-        </div>
+        .orb1{
+          width:320px;
+          height:320px;
+          background:#00d4ff;
+          top:-80px;
+          left:-80px;
+        }
 
-        <button
-          className="btn btn-light fw-bold"
-          onClick={handleLogout}
-        >
-          Logout
-        </button>
+        .orb2{
+          width:280px;
+          height:280px;
+          background:#7c4dff;
+          bottom:-100px;
+          right:-70px;
+          animation-delay:2s;
+        }
 
-      </div>
+        .orb3{
+          width:220px;
+          height:220px;
+          background:#00ff9d;
+          top:40%;
+          left:60%;
+          animation-delay:4s;
+        }
 
-      {/* ACTION BUTTONS */}
+        @keyframes float{
+          0%{
+            transform:translateY(0px) translateX(0px);
+          }
+          50%{
+            transform:translateY(-30px) translateX(20px);
+          }
+          100%{
+            transform:translateY(0px) translateX(0px);
+          }
+        }
 
-      <div className="row mb-4">
+        /* GLASS CARD */
+        .glass-card{
+          background:rgba(255,255,255,0.06);
+          backdrop-filter:blur(20px);
+          border:1px solid rgba(255,255,255,0.12);
+          border-radius:28px;
+          overflow:hidden;
+          position:relative;
+          transition:all 0.4s ease;
+        }
 
-        <div className="col-md-6 mb-3">
+        .glass-card::before{
+          content:'';
+          position:absolute;
+          inset:0;
+          background:linear-gradient(
+            120deg,
+            rgba(255,255,255,0.12),
+            transparent,
+            rgba(255,255,255,0.05)
+          );
+          opacity:0;
+          transition:0.5s;
+        }
 
-          <div
-            className="card border-0 shadow-lg p-4 text-center text-white"
-            style={{
-              background:
-                'linear-gradient(135deg, #4facfe, #00f2fe)',
-              borderRadius: '20px',
-              cursor: 'pointer'
-            }}
-            onClick={() => navigate('/map')}
-          >
+        .glass-card:hover::before{
+          opacity:1;
+        }
 
-            <h4 className="fw-bold mb-2">
-              Open Map Tracking
-            </h4>
+        .glass-card:hover{
+          transform:translateY(-10px) scale(1.01);
+          box-shadow:0 25px 60px rgba(0,0,0,0.45);
+          border-color:rgba(0,212,255,0.4);
+        }
 
-            <p className="mb-0">
-              View live donor-to-victim routes
-            </p>
+        /* HEADER */
+        .dashboard-title{
+          font-family:'Audiowide',sans-serif;
+          font-size:3rem;
+          color:white;
+          margin:0;
+          letter-spacing:2px;
+          text-shadow:0 0 18px rgba(0,212,255,0.4);
+          animation:glowPulse 2s infinite alternate;
+        }
 
-          </div>
+        @keyframes glowPulse{
+          from{
+            text-shadow:0 0 10px rgba(0,212,255,0.3);
+          }
+          to{
+            text-shadow:0 0 30px rgba(0,212,255,0.8);
+          }
+        }
 
-        </div>
+        .subtitle{
+          color:rgba(255,255,255,0.7);
+          margin-top:10px;
+          font-size:1rem;
+          display:flex;
+          align-items:center;
+          gap:10px;
+        }
 
-        <div className="col-md-6 mb-3">
+        .pulse-dot{
+          width:10px;
+          height:10px;
+          border-radius:50%;
+          background:#00d4ff;
+          animation:pulse 1.8s infinite;
+        }
 
-          <div
-            className="card border-0 shadow-lg p-4 text-center text-white"
-            style={{
-              background:
-                'linear-gradient(135deg, #43e97b, #38f9d7)',
-              borderRadius: '20px',
-              cursor: 'pointer'
-            }}
-            onClick={() => navigate('/donate')}
-          >
+        @keyframes pulse{
+          0%{
+            box-shadow:0 0 0 0 rgba(0,212,255,0.6);
+          }
+          70%{
+            box-shadow:0 0 0 14px rgba(0,212,255,0);
+          }
+          100%{
+            box-shadow:0 0 0 0 rgba(0,212,255,0);
+          }
+        }
 
-            <h4 className="fw-bold mb-2">
-              Open Donation Page
-            </h4>
+        /* BUTTONS */
+        .fancy-btn{
+          border:none;
+          border-radius:50px;
+          padding:12px 28px;
+          color:white;
+          font-weight:700;
+          cursor:pointer;
+          position:relative;
+          overflow:hidden;
+          transition:0.35s;
+        }
 
-            <p className="mb-0">
-              Manage and add disaster resources
-            </p>
+        .fancy-btn::before{
+          content:'';
+          position:absolute;
+          top:0;
+          left:-100%;
+          width:100%;
+          height:100%;
+          background:linear-gradient(
+            90deg,
+            transparent,
+            rgba(255,255,255,0.4),
+            transparent
+          );
+          transition:0.7s;
+        }
 
-          </div>
+        .fancy-btn:hover::before{
+          left:100%;
+        }
 
-        </div>
+        .fancy-btn:hover{
+          transform:translateY(-4px) scale(1.03);
+        }
 
-      </div>
+        .logout-btn{
+          background:linear-gradient(135deg,#ff4d6d,#ff758f);
+        }
 
-      {/* DASHBOARD CARDS */}
+        .submit-btn{
+          background:linear-gradient(135deg,#00c6ff,#0072ff);
+          box-shadow:0 10px 25px rgba(0,114,255,0.35);
+        }
 
-      <div className="row mb-4">
+        /* ACTION CARDS */
+        .action-card{
+          cursor:pointer;
+          transition:0.4s;
+          position:relative;
+          overflow:hidden;
+        }
 
-        <div className="col-md-4 mb-3">
+        .action-card::after{
+          content:'';
+          position:absolute;
+          inset:0;
+          background:linear-gradient(
+            120deg,
+            rgba(255,255,255,0.12),
+            transparent
+          );
+          opacity:0;
+          transition:0.4s;
+        }
 
-          <div
-            className="card border-0 shadow-lg text-white"
-            style={{
-              background:
-                'linear-gradient(135deg, #11998e, #38ef7d)',
-              borderRadius: '20px'
-            }}
-          >
+        .action-card:hover::after{
+          opacity:1;
+        }
 
-            <div className="card-body text-center">
+        .action-card:hover{
+          transform:translateY(-12px) scale(1.02);
+        }
 
-              <h5>Total Donations</h5>
+        .action-icon{
+          font-size:3rem;
+          margin-bottom:12px;
+          animation:floatIcon 3s ease-in-out infinite;
+        }
 
-              <h1>{donations.length}</h1>
+        @keyframes floatIcon{
+          0%{transform:translateY(0);}
+          50%{transform:translateY(-8px);}
+          100%{transform:translateY(0);}
+        }
 
+        /* METRIC CARDS */
+        .metric-card{
+          position:relative;
+          overflow:hidden;
+        }
+
+        .metric-card::before{
+          content:'';
+          position:absolute;
+          width:180px;
+          height:180px;
+          border-radius:50%;
+          background:rgba(255,255,255,0.12);
+          top:-70px;
+          right:-60px;
+        }
+
+        .metric-number{
+          font-size:3rem;
+          font-weight:800;
+          color:white;
+          margin-top:10px;
+        }
+
+        /* FORM */
+        .custom-input{
+          width:100%;
+          background:rgba(255,255,255,0.06);
+          border:1px solid rgba(255,255,255,0.12);
+          color:white;
+          border-radius:16px;
+          padding:14px;
+          outline:none;
+          transition:0.3s;
+        }
+
+        .custom-input:focus{
+          border-color:#00d4ff;
+          box-shadow:0 0 0 4px rgba(0,212,255,0.15);
+          transform:scale(1.01);
+        }
+
+        .custom-input::placeholder{
+          color:rgba(255,255,255,0.4);
+        }
+
+        .custom-input option{
+          background:#091120;
+          color:white;
+        }
+
+        .form-label{
+          color:rgba(255,255,255,0.85);
+          margin-bottom:8px;
+          font-weight:600;
+        }
+
+        /* TABLE */
+        .donor-table{
+          width:100%;
+          border-collapse:separate;
+          border-spacing:0 10px;
+        }
+
+        .donor-table thead th{
+          background:rgba(0,212,255,0.12);
+          color:#9be8ff;
+          padding:16px;
+          font-size:0.9rem;
+          border:none;
+        }
+
+        .donor-table tbody tr{
+          transition:0.3s;
+        }
+
+        .donor-table tbody tr:hover{
+          transform:scale(1.01);
+        }
+
+        .donor-table tbody td{
+          background:rgba(255,255,255,0.05);
+          color:white;
+          padding:16px;
+        }
+
+        /* ACTIVITY */
+        .activity-item{
+          background:rgba(255,255,255,0.04);
+          border-radius:18px;
+          transition:0.35s;
+          border:1px solid rgba(255,255,255,0.05);
+        }
+
+        .activity-item:hover{
+          transform:translateX(8px);
+          background:rgba(0,212,255,0.08);
+        }
+
+        /* BADGES */
+        .status-badge{
+          padding:8px 16px;
+          border-radius:30px;
+          font-size:0.8rem;
+          font-weight:700;
+          text-transform:uppercase;
+        }
+
+        /* FADE */
+        .fade-in{
+          animation:fadeUp 0.8s ease;
+        }
+
+        @keyframes fadeUp{
+          from{
+            opacity:0;
+            transform:translateY(30px);
+          }
+          to{
+            opacity:1;
+            transform:translateY(0);
+          }
+        }
+
+        /* SCROLL */
+        ::-webkit-scrollbar{
+          width:6px;
+        }
+
+        ::-webkit-scrollbar-thumb{
+          background:#00d4ff;
+          border-radius:20px;
+        }
+      `}</style>
+
+      <div className="bg-image"></div>
+      <div className="orb orb1"></div>
+      <div className="orb orb2"></div>
+      <div className="orb orb3"></div>
+
+      <div className="container-fluid p-4 fade-in">
+
+        {/* HEADER */}
+        <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-5">
+
+          <div>
+            <h1 className="dashboard-title">
+              DONOR HUB
+            </h1>
+
+            <div className="subtitle">
+              <span className="pulse-dot"></span>
+              Real-time disaster relief contribution & tracking
             </div>
-
-          </div>
-
-        </div>
-
-        <div className="col-md-4 mb-3">
-
-          <div
-            className="card border-0 shadow-lg text-white"
-            style={{
-              background:
-                'linear-gradient(135deg, #f7971e, #ffd200)',
-              borderRadius: '20px'
-            }}
-          >
-
-            <div className="card-body text-center">
-
-              <h5>Assigned</h5>
-
-              <h1>
-
-                {
-                  donations.filter(
-                    d => d.status === 'assigned'
-                  ).length
-                }
-
-              </h1>
-
-            </div>
-
-          </div>
-
-        </div>
-
-        <div className="col-md-4 mb-3">
-
-          <div
-            className="card border-0 shadow-lg text-white"
-            style={{
-              background:
-                'linear-gradient(135deg, #36d1dc, #5b86e5)',
-              borderRadius: '20px'
-            }}
-          >
-
-            <div className="card-body text-center">
-
-              <h5>Delivered</h5>
-
-              <h1>
-
-                {
-                  donations.filter(
-                    d => d.status === 'delivered'
-                  ).length
-                }
-
-              </h1>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-
-      {/* ADD DONATION FORM */}
-
-      <div
-        className="card border-0 shadow-lg p-4 mb-4"
-        style={{
-          borderRadius: '20px'
-        }}
-      >
-
-        <h4 className="mb-4 fw-bold">
-          Add New Donation
-        </h4>
-
-        <form onSubmit={handleSubmit}>
-
-          <div className="row">
-
-            <div className="col-md-6 mb-3">
-
-              <label className="form-label">
-                Resource Type
-              </label>
-
-              <select
-                className="form-select"
-                name="resource_type"
-                value={formData.resource_type}
-                onChange={handleChange}
-                required
-              >
-
-                <option value="">
-                  Select Resource
-                </option>
-
-                <option value="Food Kits">
-                  Food Kits
-                </option>
-
-                <option value="Water Bottles">
-                  Water Bottles
-                </option>
-
-                <option value="Medicines">
-                  Medicines
-                </option>
-
-                <option value="Blankets">
-                  Blankets
-                </option>
-
-                <option value="Clothes">
-                  Clothes
-                </option>
-
-                <option value="Shelter Kits">
-                  Shelter Kits
-                </option>
-
-              </select>
-
-            </div>
-
-            <div className="col-md-6 mb-3">
-
-              <label className="form-label">
-                Quantity
-              </label>
-
-              <input
-                type="number"
-                className="form-control"
-                name="quantity"
-                value={formData.quantity}
-                onChange={handleChange}
-                required
-              />
-
-            </div>
-
-            <div className="col-md-6 mb-3">
-
-              <label className="form-label">
-                Location
-              </label>
-
-              <input
-                type="text"
-                className="form-control"
-                name="location"
-                value={formData.location}
-                placeholder="Enter your city"
-                onChange={handleChange}
-                required
-              />
-
-            </div>
-
           </div>
 
           <button
-            type="submit"
-            className="btn btn-success px-4"
+            className="fancy-btn logout-btn"
+            onClick={handleLogout}
           >
-            Add Donation
+            Logout
           </button>
 
-        </form>
+        </div>
 
-      </div>
+        {/* ACTION CARDS */}
+        <div className="row mb-4">
 
-      {/* DONATION TABLE */}
+          <div className="col-md-6 mb-3">
 
-      {
+            <div
+              className="glass-card action-card p-4"
+              style={{
+                background:
+                  'linear-gradient(135deg,#0f2027,#203a43,#2c5364)'
+              }}
+              onClick={() => navigate('/map')}
+            >
 
-        donations.length > 0 && (
+              <div className="action-icon">
+                🗺
+              </div>
 
-          <div
-            className="card border-0 shadow-lg p-4"
-            style={{
-              borderRadius: '20px'
-            }}
-          >
+              <h3 className="text-white fw-bold">
+                Open Live Map
+              </h3>
 
-            <div className="d-flex justify-content-between align-items-center mb-4">
+              <p className="text-light mb-0">
+                Track donation delivery routes & hotspot areas
+              </p>
 
-              <h4 className="fw-bold">
-                My Donations
-              </h4>
+            </div>
 
-              {/* FILTER */}
+          </div>
+
+          <div className="col-md-6 mb-3">
+
+            <div
+              className="glass-card action-card p-4"
+              style={{
+                background:
+                  'linear-gradient(135deg,#11998e,#38ef7d)'
+              }}
+              onClick={() => navigate('/donate')}
+            >
+
+              <div className="action-icon">
+                📦
+              </div>
+
+              <h3 className="text-white fw-bold">
+                Donate Resources
+              </h3>
+
+              <p className="text-light mb-0">
+                Add relief resources for disaster victims
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* METRICS */}
+        <div className="row mb-4">
+
+          <div className="col-md-3 mb-3">
+            <div
+              className="glass-card metric-card p-4"
+              style={{
+                background:
+                  'linear-gradient(135deg,#4568dc,#b06ab3)'
+              }}
+            >
+              <h6 className="text-light">
+                Total Donations
+              </h6>
+
+              <div className="metric-number">
+                {totalCount}
+              </div>
+            </div>
+          </div>
+
+          <div className="col-md-3 mb-3">
+            <div
+              className="glass-card metric-card p-4"
+              style={{
+                background:
+                  'linear-gradient(135deg,#11998e,#38ef7d)'
+              }}
+            >
+              <h6 className="text-light">
+                Available
+              </h6>
+
+              <div className="metric-number">
+                {availableCount}
+              </div>
+            </div>
+          </div>
+
+          <div className="col-md-3 mb-3">
+            <div
+              className="glass-card metric-card p-4"
+              style={{
+                background:
+                  'linear-gradient(135deg,#f7971e,#ffd200)'
+              }}
+            >
+              <h6 className="text-light">
+                Assigned
+              </h6>
+
+              <div className="metric-number">
+                {assignedCount}
+              </div>
+            </div>
+          </div>
+
+          <div className="col-md-3 mb-3">
+            <div
+              className="glass-card metric-card p-4"
+              style={{
+                background:
+                  'linear-gradient(135deg,#00c6ff,#0072ff)'
+              }}
+            >
+              <h6 className="text-light">
+                Delivered
+              </h6>
+
+              <div className="metric-number">
+                {deliveredCount}
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* ADD DONATION FORM */}
+        <div className="glass-card p-4 mb-4">
+
+          <h3 className="text-white fw-bold mb-4">
+            ➕ Add New Donation
+          </h3>
+
+          <form onSubmit={handleSubmit}>
+
+            <div className="row">
+
+              <div className="col-md-4 mb-3">
+
+                <label className="form-label">
+                  Resource Type
+                </label>
+
+                <select
+                  className="custom-input"
+                  name="resource_type"
+                  value={formData.resource_type}
+                  onChange={handleChange}
+                  required
+                >
+
+                  <option value="">
+                    Select Resource
+                  </option>
+
+                  <option value="Food Kits">
+                    Food Kits
+                  </option>
+
+                  <option value="Water Bottles">
+                    Water Bottles
+                  </option>
+
+                  <option value="Medicines">
+                    Medicines
+                  </option>
+
+                  <option value="Blankets">
+                    Blankets
+                  </option>
+
+                  <option value="Clothes">
+                    Clothes
+                  </option>
+
+                  <option value="Shelter Kits">
+                    Shelter Kits
+                  </option>
+
+                </select>
+
+              </div>
+
+              <div className="col-md-4 mb-3">
+
+                <label className="form-label">
+                  Quantity
+                </label>
+
+                <input
+                  type="number"
+                  className="custom-input"
+                  name="quantity"
+                  value={formData.quantity}
+                  onChange={handleChange}
+                  placeholder="Enter quantity"
+                  required
+                />
+
+              </div>
+
+              <div className="col-md-4 mb-3">
+
+                <label className="form-label">
+                  Location
+                </label>
+
+                <input
+                  type="text"
+                  className="custom-input"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  placeholder="Enter city"
+                  required
+                />
+
+              </div>
+
+            </div>
+
+            <button
+              type="submit"
+              className="fancy-btn submit-btn mt-3"
+            >
+              ✨ Submit Donation
+            </button>
+
+          </form>
+
+        </div>
+
+        {/* LIVE FEED */}
+        <div className="glass-card p-4 mb-4">
+
+          <h3 className="text-white fw-bold mb-4">
+            🔥 Live Donation Feed
+          </h3>
+
+          <div style={{
+            maxHeight: '320px',
+            overflowY: 'auto'
+          }}>
+
+            {donations.slice(0, 8).map((d, index) => (
+
+              <div
+                key={index}
+                className="activity-item p-3 mb-3"
+              >
+
+                <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
+
+                  <div>
+
+                    <h5 className="text-white fw-bold mb-1">
+                      {d.resource_type}
+                    </h5>
+
+                    <p className="text-light mb-1">
+                      Qty: {d.quantity} · 📍 {d.location}
+                    </p>
+
+                    <small style={{
+                      color: '#8fdfff'
+                    }}>
+                      {d.created_at
+                        ? new Date(d.created_at).toLocaleString()
+                        : 'N/A'}
+                    </small>
+
+                  </div>
+
+                  <span
+                    className="status-badge"
+                    style={{
+                      background:
+                        d.status === 'available'
+                          ? 'rgba(0,255,157,0.15)'
+                          : d.status === 'assigned'
+                          ? 'rgba(255,208,0,0.15)'
+                          : 'rgba(0,212,255,0.15)',
+
+                      color:
+                        d.status === 'available'
+                          ? '#00ff9d'
+                          : d.status === 'assigned'
+                          ? '#ffd000'
+                          : '#00d4ff'
+                    }}
+                  >
+                    {d.status}
+                  </span>
+
+                </div>
+
+              </div>
+
+            ))}
+
+          </div>
+
+        </div>
+
+        {/* FILTER */}
+        <div className="glass-card p-4 mb-4">
+
+          <h3 className="text-white fw-bold mb-4">
+            🔍 Filter Donations
+          </h3>
+
+          <div className="row">
+
+            <div className="col-md-4">
 
               <select
-                className="form-select w-auto"
+                className="custom-input"
                 value={statusFilter}
                 onChange={(e) =>
                   setStatusFilter(e.target.value)
@@ -459,78 +878,99 @@ function DonorDashboard() {
 
             </div>
 
-            <div className="table-responsive">
+          </div>
 
-              <table className="table table-hover align-middle">
+        </div>
 
-                <thead className="table-dark">
+        {/* TABLE */}
+        <div className="glass-card p-4">
 
-                  <tr>
+          <h3 className="text-white fw-bold mb-4">
+            🚚 Donation Records
+          </h3>
 
-                    <th>Resource Type</th>
+          <div className="table-responsive">
 
-                    <th>Quantity</th>
+            <table className="donor-table">
 
-                    <th>Location</th>
+              <thead>
 
-                    <th>Status</th>
+                <tr>
+                  <th>Resource</th>
+                  <th>Quantity</th>
+                  <th>Location</th>
+                  <th>Status</th>
+                </tr>
+
+              </thead>
+
+              <tbody>
+
+                {filteredDonations.map((d, index) => (
+
+                  <tr key={index}>
+
+                    <td>
+                      {d.resource_type}
+                    </td>
+
+                    <td>
+                      {d.quantity}
+                    </td>
+
+                    <td>
+                      📍 {d.location}
+                    </td>
+
+                    <td>
+
+                      <span
+                        className="status-badge"
+                        style={{
+                          background:
+                            d.status === 'available'
+                              ? 'rgba(0,255,157,0.15)'
+                              : d.status === 'assigned'
+                              ? 'rgba(255,208,0,0.15)'
+                              : 'rgba(0,212,255,0.15)',
+
+                          color:
+                            d.status === 'available'
+                              ? '#00ff9d'
+                              : d.status === 'assigned'
+                              ? '#ffd000'
+                              : '#00d4ff'
+                        }}
+                      >
+                        {d.status}
+                      </span>
+
+                    </td>
 
                   </tr>
 
-                </thead>
+                ))}
 
-                <tbody>
+              </tbody>
 
-                  {
-
-                    filteredDonations.map((d, index) => (
-
-                      <tr key={index}>
-
-                        <td>{d.resource_type}</td>
-
-                        <td>{d.quantity}</td>
-
-                        <td>{d.location}</td>
-
-                        <td>
-
-                          <span className={`badge bg-${
-                            d.status === 'available'
-                              ? 'success'
-                              : d.status === 'assigned'
-                              ? 'warning'
-                              : 'info'
-                          }`}>
-
-                            {d.status}
-
-                          </span>
-
-                        </td>
-
-                      </tr>
-
-                    ))
-
-                  }
-
-                </tbody>
-
-              </table>
-
-            </div>
+            </table>
 
           </div>
 
-        )
+        </div>
 
-      }
+      </div>
 
     </div>
-
   );
-
 }
+
+const styles = {
+  page: {
+    minHeight: '100vh',
+    position: 'relative',
+    overflow: 'hidden'
+  }
+};
 
 export default DonorDashboard;
