@@ -35,6 +35,7 @@ import RequestForm from './pages/RequestForm';
 import MatchTracking from './pages/MatchTracking';
 
 import MapDashboard from './pages/MapDashboard';
+import MyDonations from "./pages/MyDonations";
 
 function App() {
 
@@ -79,6 +80,7 @@ function App() {
           path="/donor-dashboard"
           element={<DonorDashboard />}
         />
+        <Route path="/mydonations" element={<MyDonations />} />
 
         <Route
           path="/admin-dashboard"
@@ -96,6 +98,7 @@ function App() {
           path="/request"
           element={<RequestForm />}
         />
+        
 
         {/* TRACKING */}
 

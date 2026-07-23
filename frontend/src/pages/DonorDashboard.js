@@ -526,63 +526,93 @@ function DonorDashboard() {
         </div>
 
         {/* ACTION CARDS */}
-        <div className="row mb-4">
+<div className="row mb-4">
 
-          <div className="col-md-6 mb-3">
+  {/* LIVE MAP */}
+  <div className="col-md-4 mb-3">
 
-            <div
-              className="glass-card action-card p-4"
-              style={{
-                background:
-                  'linear-gradient(135deg,#0f2027,#203a43,#2c5364)'
-              }}
-              onClick={() => navigate('/map')}
-            >
+    <div
+      className="glass-card action-card p-4"
+      style={{
+        background:
+          'linear-gradient(135deg,#0f2027,#203a43,#2c5364)'
+      }}
+      onClick={() => navigate('/map')}
+    >
 
-              <div className="action-icon">
-                🗺
-              </div>
+      <div className="action-icon">
+        🗺
+      </div>
 
-              <h3 className="text-white fw-bold">
-                Open Live Map
-              </h3>
+      <h3 className="text-white fw-bold">
+        Open Live Map
+      </h3>
 
-              <p className="text-light mb-0">
-                Track donation delivery routes & hotspot areas
-              </p>
+      <p className="text-light mb-0">
+        Track donation delivery routes & hotspot areas
+      </p>
 
-            </div>
+    </div>
 
-          </div>
+  </div>
 
-          <div className="col-md-6 mb-3">
+  {/* DONATE */}
+  <div className="col-md-4 mb-3">
 
-            <div
-              className="glass-card action-card p-4"
-              style={{
-                background:
-                  'linear-gradient(135deg,#11998e,#38ef7d)'
-              }}
-              onClick={() => navigate('/donate')}
-            >
+    <div
+      className="glass-card action-card p-4"
+      style={{
+        background:
+          'linear-gradient(135deg,#11998e,#38ef7d)'
+      }}
+      onClick={() => navigate('/donate')}
+    >
 
-              <div className="action-icon">
-                📦
-              </div>
+      <div className="action-icon">
+        📦
+      </div>
 
-              <h3 className="text-white fw-bold">
-                Donate Resources
-              </h3>
+      <h3 className="text-white fw-bold">
+        Donate Resources
+      </h3>
 
-              <p className="text-light mb-0">
-                Add relief resources for disaster victims
-              </p>
+      <p className="text-light mb-0">
+        Add relief resources for disaster victims
+      </p>
 
-            </div>
+    </div>
 
-          </div>
+  </div>
 
-        </div>
+  {/* MY DONATIONS */}
+  <div className="col-md-4 mb-3">
+
+    <div
+      className="glass-card action-card p-4"
+      style={{
+        background:
+          'linear-gradient(135deg,#ff9966,#ff5e62)'
+      }}
+      onClick={() => navigate('/mydonations')}
+    >
+
+      <div className="action-icon">
+        ❤️
+      </div>
+
+      <h3 className="text-white fw-bold">
+        My Donations
+      </h3>
+
+      <p className="text-light mb-0">
+        View your contribution impact & delivery details
+      </p>
+
+    </div>
+
+  </div>
+
+</div>
 
         {/* METRICS */}
         <div className="row mb-4">
@@ -661,111 +691,7 @@ function DonorDashboard() {
 
         </div>
 
-        {/* ADD DONATION FORM */}
-        <div className="glass-card p-4 mb-4">
-
-          <h3 className="text-white fw-bold mb-4">
-            ➕ Add New Donation
-          </h3>
-
-          <form onSubmit={handleSubmit}>
-
-            <div className="row">
-
-              <div className="col-md-4 mb-3">
-
-                <label className="form-label">
-                  Resource Type
-                </label>
-
-                <select
-                  className="custom-input"
-                  name="resource_type"
-                  value={formData.resource_type}
-                  onChange={handleChange}
-                  required
-                >
-
-                  <option value="">
-                    Select Resource
-                  </option>
-
-                  <option value="Food Kits">
-                    Food Kits
-                  </option>
-
-                  <option value="Water Bottles">
-                    Water Bottles
-                  </option>
-
-                  <option value="Medicines">
-                    Medicines
-                  </option>
-
-                  <option value="Blankets">
-                    Blankets
-                  </option>
-
-                  <option value="Clothes">
-                    Clothes
-                  </option>
-
-                  <option value="Shelter Kits">
-                    Shelter Kits
-                  </option>
-
-                </select>
-
-              </div>
-
-              <div className="col-md-4 mb-3">
-
-                <label className="form-label">
-                  Quantity
-                </label>
-
-                <input
-                  type="number"
-                  className="custom-input"
-                  name="quantity"
-                  value={formData.quantity}
-                  onChange={handleChange}
-                  placeholder="Enter quantity"
-                  required
-                />
-
-              </div>
-
-              <div className="col-md-4 mb-3">
-
-                <label className="form-label">
-                  Location
-                </label>
-
-                <input
-                  type="text"
-                  className="custom-input"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  placeholder="Enter city"
-                  required
-                />
-
-              </div>
-
-            </div>
-
-            <button
-              type="submit"
-              className="fancy-btn submit-btn mt-3"
-            >
-              ✨ Submit Donation
-            </button>
-
-          </form>
-
-        </div>
+        
 
         {/* LIVE FEED */}
         <div className="glass-card p-4 mb-4">
