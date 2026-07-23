@@ -4,6 +4,7 @@ A full-stack web-based Disaster Relief Resource Management System designed to ef
 
 The system provides role-based access for administrators, NGOs, and donors, enabling efficient management and tracking of disaster relief operations through a centralized platform.
 
+---
 
 ## 📌 Project Overview
 
@@ -19,6 +20,7 @@ This project aims to provide a centralized digital platform that connects:
 
 The system allows users to contribute resources, submit resource requests, manage donations, track resource allocation, and monitor the delivery process.
 
+---
 
 ## ✨ Key Features
 
